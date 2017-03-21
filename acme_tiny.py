@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse, subprocess, json, os, sys, base64, binascii, time, hashlib, re, copy, textwrap, logging
+import ssl
 try:
     from urllib.request import urlopen # Python 3
 except ImportError:
@@ -112,9 +113,10 @@ def get_crt(account_key, csr, acme_dir, log=LOGGER, CA=DEFAULT_CA):
             wellknown_file.write(keyauthorization)
 
         # check that the file is in place
-        wellknown_url = "http://{0}/.well-known/acme-challenge/{1}".format(domain, token)
+        wellknown_url = "https://{0}/.well-known/acme-challenge/{1}".format(domain, token)
         try:
-            resp = urlopen(wellknown_url)
+            context = ssl._create_unverified_context()
+            resp = urlopen(wellknown_url, context=context)
             resp_data = resp.read().decode('utf8').strip()
             assert resp_data == keyauthorization
         except (IOError, AssertionError):
